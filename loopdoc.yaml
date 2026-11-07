@@ -1,0 +1,15 @@
+Name: "CharacterEngine"
+Types: []
+Ledger: []
+Static: 
+    name: "can_move"
+    inputs:
+        - field: "map"
+          type: "LevelEngine:Map"
+        - field: "delta"
+          type: "CurioCore:Vector2"
+        - field: "cur_pos"
+          type: "CurioCore:Vector2"
+    outputs:
+        - field: "can_move"
+          type: "bool"
