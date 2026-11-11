@@ -1,7 +1,141 @@
+# TileWalker — self-contained tile-movement package, data-fed.
+# Nothing is read from the world and nothing is read from engine input:
+# everything arrives as data — Intent bools (fed by anything) and a
+# NavGrid (map-side authority: its own geometry + sparse blocked cells).
+# Visuals are spawned from the same NavGrid elsewhere by the game.
+
 Name: "CharacterEngine"
-Types: []
-Ledger: 
-    name: 
-        - field: "cur_pos"
-          type: "CurioCore:Vector2"
-Static: []
+
+Types:
+    - TileConfig:
+        - field: "schema"
+          type: "int"
+        - field: "name"
+          type: "string"
+        - field: "connectivity"
+          type: "int"          # 4 | 8
+        - field: "speed"
+          type: "float"        # tiles per second
+        - field: "turn"
+          type: "string"       # snap | smooth
+        - field: "traversal"
+          type: "string"       # discrete | sliding | hybrid
+
+    - NavGrid:
+        - field: "plane"
+          type: "string"       # xz | xy | zy
+        - field: "origin_x"
+          type: "float"
+        - field: "origin_y"
+          type: "float"
+        - field: "origin_z"
+          type: "float"
+        - field: "tile_w"
+          type: "float"
+        - field: "tile_h"
+          type: "float"
+        - field: "blocked"
+          type: "NavCell[]"    # sparse wall list; unlisted cells are open
+
+    - NavCell:
+        - field: "col"
+          type: "int"
+        - field: "row"
+          type: "int"
+
+    - GridCell:
+        - field: "col"
+          type: "int"
+        - field: "row"
+          type: "int"
+
+    - Intent:
+        - field: "up"
+          type: "bool"
+        - field: "down"
+          type: "bool"
+        - field: "left"
+          type: "bool"
+        - field: "right"
+          type: "bool"
+
+    - WalkState:
+        - field: "cell"
+          type: "GridCell"
+        - field: "target"
+          type: "GridCell"
+        - field: "slide_t"
+          type: "float"
+        - field: "yaw"
+          type: "float"        # degrees; 8-way facing, no quaternion
+        - field: "moving"
+          type: "bool"
+
+    - StimulantEvent:
+        - field: "kind"
+          type: "string"       # tile_arrive | blocked | teleport
+
+    - Vec3:
+        - field: "x"
+          type: "float"
+        - field: "y"
+          type: "float"
+        - field: "z"
+          type: "float"
+
+Ledger:
+    - events:
+        - field: "tile_walker_events"
+          type: "StimulantEvent[]"   # written each tick; Habits/Impulses read
+    - telemetry:
+        - field: "tile_walker_arrived"
+          type: "int"
+        - field: "tile_walker_blocked"
+          type: "int"
+
+Static:
+    - name: "default_config"
+      inputs: []
+      outputs:
+          - field: "config"
+            type: "TileConfig"
+
+    - name: "coord_of"
+      inputs:
+          - field: "at"
+            type: "Vec3"
+          - field: "nav"
+            type: "NavGrid"
+      outputs:
+          - field: "cell"
+            type: "GridCell"
+
+    - name: "tile_passable"
+      inputs:
+          - field: "cell"
+            type: "GridCell"
+          - field: "nav"
+            type: "NavGrid"
+      outputs:
+          - field: "passable"
+            type: "bool"
+
+    - name: "step_tile"
+      inputs:
+          - field: "config"
+            type: "TileConfig"
+          - field: "nav"
+            type: "NavGrid"
+          - field: "current"
+            type: "GridCell"
+          - field: "intent"
+            type: "Intent"
+          - field: "dt"
+            type: "float"
+      outputs:
+          - field: "cell"
+            type: "GridCell"
+          - field: "position"
+            type: "Vec3"
+          - field: "arrived"
+            type: "bool"
